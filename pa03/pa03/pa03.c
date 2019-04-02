@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#define parent(x) (x-1)/2
 
 int *RandomNumber(int N);
 int *ReverseArr(int N);
@@ -17,23 +18,28 @@ int Partition2(int list[], int left, int right);
 int Partition3(int list[], int left, int right);
 int median_of_three(int arr[], int left, int right);
 void Swap(int *arr, int a, int b);
+void heap(int arr[], int N);
+void HeapSort(int arr[], int N, int c);
+int static compare(const void* first, const void* second);
 
 int tmp[1000];
 int tmp1[10000];
 int tmp2[100000];
-double ExeTime[7][6];
+double ExeTime[9][6];
 int pivot, low, high;
-
+	
 int main() {
 	int arrsize[3] = { 1000,10000,100000 };
 	int *test[33];
 	int *q1test[33];
 	int *q2test[33];
 	int *q3test[33];
+	int *heaptest[33];
+	int *libtest[33];
 	int sec = 1000;
 	time_t start, end;
 
-	char *algo[7] = { "Bubble","Selection","Insertion","Merge","Quick1","Quick2" ,"Quick3" };
+	char *algo[9] = { "Bubble","Selection","Insertion","Merge","Quick1","Quick2" ,"Quick3", "Heap", "Library" };
 
 	for (int i = 0; i < 33; i++) {
 		int q = i / 10;
@@ -44,9 +50,14 @@ int main() {
 			q1test[i] = RandomNumber(arrsize[q]);
 			q2test[i] = RandomNumber(arrsize[q]);
 			q3test[i] = RandomNumber(arrsize[q]);
+			heaptest[i] = RandomNumber(arrsize[q]);
+			libtest[i] = RandomNumber(arrsize[q]);
 		}
-		else
+		else {
 			test[i] = ReverseArr(arrsize[r]);
+			heaptest[i] = ReverseArr(arrsize[r]);
+			libtest[i] = ReverseArr(arrsize[r]);
+		}
 
 		if (i < 30) {
 			BubbleSort(0, arrsize[q], q);
@@ -65,24 +76,34 @@ int main() {
 			QuickSort3(q3test[i], 0, arrsize[q] - 1);
 			end = time(NULL);
 			ExeTime[5][q] += (int)(end - start);
+			HeapSort(heaptest[i], arrsize[q], q);
+			start = time(NULL);
+			qsort(libtest[i], arrsize[q], sizeof(int), compare);
+			end = time(NULL);
+			ExeTime[8][q] += (int)(end - start);
 		}
 		else {
 			BubbleSort(1, arrsize[r], q + r);
 			SelectionSort(1, arrsize[r], q + r);
 			InsertionSort(1, arrsize[r], q + r);
 			MergeSort(test[i], 0, arrsize[r] - 1, r, q + r);
+			HeapSort(heaptest[i], arrsize[r], q+r);
+			start = time(NULL);
+			qsort(libtest[i], arrsize[r], sizeof(int), compare);
+			end = time(NULL);
+			ExeTime[8][q+r] += (int)(end - start);
 		}
 	}
 	printf("------------------------------------------------------------------------------------------\n");
 	printf("		Random1000 Reverse1000 Random10000 Reverse10000 Random100000 Reverse100000\n");
 	printf("------------------------------------------------------------------------------------------\n");
 
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 6; j++) {
 			ExeTime[i][j] /= sec;
 		}
 	}
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < 9; i++) {
 		if (i != 1 && i != 2) {
 			if (i == 4 || i == 5 || i == 6) {
 				printf("%s	\t%lf   %s    %lf    %s     %lf     %s\n", algo[i], ExeTime[i][0] / 10, "Overflow", ExeTime[i][1] / 10, "Overflow", ExeTime[i][2] / 10, "Overflow");
@@ -336,4 +357,48 @@ int median_of_three(int arr[], int left, int right) {
 		Swap(arr, mid, right);
 
 	return mid;
+}
+
+
+void heap(int arr[], int N) {
+	for (int i = 1; i < N; i++) {
+		int child = i;
+		while (child > 0) {
+			int root = parent(child);
+			if (arr[root] < arr[child]) {
+				int temp = arr[root];
+				arr[root] = arr[child];
+				arr[child] = temp;
+			}
+			child = root;
+		}
+	}
+}
+
+void HeapSort(int arr[], int N, int c) {
+	time_t start, end;
+	int result;
+	start = time(NULL);
+
+	heap(arr, N);
+
+	for (int i = N - 1; i >= 0; i--) {
+		int temp = arr[i];
+		arr[i] = arr[0];
+		arr[0] = temp;
+
+		heap(arr, i);
+	}
+	end = time(NULL);
+	result = (int)(end - start);
+	ExeTime[7][c] += result;
+}
+
+int static compare(const void* first, const void* second){
+	if (*(int*)first > *(int*)second)
+		return 1;
+	else if (*(int*)first < *(int*)second)
+		return -1;
+	else
+		return 0;
 }
